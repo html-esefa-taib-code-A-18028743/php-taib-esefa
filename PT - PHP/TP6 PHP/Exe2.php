@@ -1,81 +1,17 @@
-//ne pas coréct !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-<?php
-define('page_titre', "Stocks &bull; Caisse Foyer");
-
-
-include_once 'inclus/zoneadmin.inc.php';
-
-// Traitement AJAX
-if(isset($_GET['ajax'])
-    and !empty($_POST['nom'])
-    and isset($_POST['prix'])
-    and isset($_POST['id'])
-    and !empty($_POST['volume'])
-    and isset($_POST['qtt_reserve'])
-    and $_POST['prix'] >= 0
-    and $_POST['volume'] > 0
-  ){
-    logue("Modification du produit {$_POST['nom']} ({$_POST['prix']}€ et {$_POST['qtt_reserve']} en réserve)","stocks","warn");
-    $_POST['id'] = intval($_POST['id']);
-    $_POST['prix'] = floatval($_POST['prix']);
-    $_POST['volume'] = floatval($_POST['volume']);
-    $_POST['qtt_reserve'] = floatval($_POST['qtt_reserve']);
-//     $_POST['qtt_alerte'] = floatval($_POST['qtt_alerte']);
-    $_POST['nom'] = htmlentities($_POST['nom'],ENT_QUOTES,'utf-8');
-    
-    $sql->rek( "UPDATE produits SET `nom`='{$_POST['nom']}', `vol`='{$_POST['volume']}', `prix`='{$_POST['prix']}', `qtt_reserve`='{$_POST['qtt_reserve']}' WHERE id='{$_POST['id']}'" ); /*, `qtt_alerte`='{$_POST['qtt_alerte']}'*/
-    echo $sql->nbrchangements();
-    exit();
-}
-
-$head_HTML = '<script type="text/javascript" src="scripts/admin.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.js"></script>';
-
-include_once 'inclus/tete.html.php';
-
-?>
-  <div class="central bloc stocks">
-   <a href="./administration.php" class="maison">Retour</a>
-    <h1>On a quoi en réserve ?</h1>
-    <?php
-    
-
-if(!empty($_GET['efface'])){
-    $id = intval($_GET['efface']);
-    
-    $sql->rek( "DELETE FROM produits WHERE id='$id'" );
-    if($sql->nbrchangements() != 1){
-      logue("Erreur lors de la suppression d'un produit !","erreur",'critique');
-      echo '<div class="notif argh"><strong>Échec</strong>Impossible de supprimer le produit #'.$id.'... C\'est dommage !</div>';
+//------------------------------------
+function ajouter_Produit($nom, $id_produit, $quantite, $prix)
+{ 
+    $position_produit = array_search($id_produit,  $_SESSION['panier']['id_produit']);
+    if($position_produit !== false)
+    {
+         $_SESSION['panier']['quantite'][$position_produit] += $quantite ;
     }
-    else{
-      logue("Suppression du produit #$id",'stocks','warn');
-      echo '<div class="notif yeah estompe"><strong>Produit supprimé</strong>Et un de moins !<br>Les statistiques resteront sauvegardées mais ne seront plus visibles, pour les restaurer : faire appel à MB015 !</div>';
+    else
+    {
+        $_SESSION['panier']['nom'][] = $nom;
+        $_SESSION['panier']['id_produit'][] = $id_produit;
+        $_SESSION['panier']['quantite'][] = $quantite;
+        $_SESSION['panier']['prix'][] = $prix;
     }
 }
-
-if(!empty($_GET['ajout'])){
-    if(!empty($_POST['nom'])
-    and isset($_POST['prix'])
-    and !empty($_POST['volume'])
-    and isset($_POST['qtt_reserve'])
-    and isset($_POST['qtt_alerte'])
-    and $_POST['prix'] >= 0
-    ){
-      $_POST['prix'] = floatval($_POST['prix']);
-      $_POST['qtt_reserve'] = floatval($_POST['qtt_reserve']);
-      $_POST['qtt_alerte'] = floatval($_POST['qtt_alerte']);
-      $_POST['nom'] = htmlentities($_POST['nom'],ENT_QUOTES,'utf-8');
-      $_POST['volume'] = floatval($_POST['volume']);
-      
-      $sql->rek( "INSERT INTO produits (`nom` ,`prix` ,`qtt_reserve`,`qtt_alerte`, `vol`) VALUES ('{$_POST['nom']}','{$_POST['prix']}','{$_POST['qtt_reserve']}','{$_POST['qtt_alerte']}','{$_POST['volume']}')" );
-      if($sql->nbrchangements() != 1){
-	logue("Erreur SQL lors de l'ajout d'un produit !","erreur");
-	echo '<div class="notif argh"><strong>Échec</strong>Une erreur s\'est produite, il n\'a pas été possible de rajouter ce produit... Le frigo est plein ?</div>';
-      }
-      else{
-	logue("Ajout du produit \"{$_POST['nom']}\"",'stocks','warn');
-	echo '<div class="notif yeah estompe"><strong>Produit ajouté</strong>Et un de plus !</div>';
-      }
-    }
-}
-?>
+//------------------------------------
