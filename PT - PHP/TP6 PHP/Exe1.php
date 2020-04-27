@@ -1,4 +1,4 @@
-function connectMaBase(){
+function connexion(){
     $base = mysql_connect ('localhost', 'root', '');  
-    mysql_select_db ('MaBase', $base) ;
+    mysql_select_db ('DB_MGF', $base) ;
 }
